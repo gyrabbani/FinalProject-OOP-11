@@ -1,9 +1,34 @@
 package com.finpro.frontend;
 
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class Main extends ApplicationAdapter {
+public class Main extends Game {
+    public SpriteBatch batch;
 
+    @Override
+    public void create() {
+        batch = new SpriteBatch();
+
+        ResourceManager.getInstance().loadAll();
+
+        GameManager.getInstance().reset();
+
+        setScreen(new GameScreen());
+    }
+
+    @Override
+    public void render() {
+        super.render();
+    }
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        ResourceManager.getInstance().dispose();
+    }
 }
+
