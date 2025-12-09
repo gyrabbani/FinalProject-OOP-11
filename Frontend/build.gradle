@@ -71,4 +71,3 @@ subprojects {
 }
 
 eclipse.project.name = 'FinalProject-OOP-11' + '-parent'
-
