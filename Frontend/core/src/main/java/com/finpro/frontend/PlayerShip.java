@@ -3,8 +3,6 @@ package com.finpro.frontend;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.finpro.frontend.pools.BulletPool;
-import com.finpro.frontend.GameConfig;
-import com.finpro.frontend.ResourceManager;
 import com.finpro.frontend.strategies.SingleShotStrategy;
 import com.finpro.frontend.strategies.WeaponStrategy;
 
