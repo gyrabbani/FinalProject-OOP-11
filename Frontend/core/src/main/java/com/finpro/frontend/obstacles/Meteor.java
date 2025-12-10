@@ -13,7 +13,6 @@ public class Meteor extends BaseEntity {
 
     private Texture texture;
     private Vector2 velocity;
-
     private int hp;
 
     public Meteor() {
@@ -27,7 +26,6 @@ public class Meteor extends BaseEntity {
         this.position.set(startX, startY);
         this.updateBounds();
         this.isActive = true;
-
         this.hp = 2;
 
         Vector2 direction = new Vector2(targetX - startX, targetY - startY);
@@ -60,9 +58,7 @@ public class Meteor extends BaseEntity {
     public void render(SpriteBatch batch) {
         if (isActive) {
             if (hp == 1) batch.setColor(1f, 0.5f, 0.5f, 1f);
-
             batch.draw(texture, position.x, position.y, bounds.width, bounds.height);
-
             batch.setColor(Color.WHITE);
         }
     }
@@ -75,4 +71,3 @@ public class Meteor extends BaseEntity {
         p.dispose();
     }
 }
-

@@ -9,12 +9,10 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.finpro.frontend.commands.InputHandler;
-import com.finpro.frontend.Bullet;
-import com.finpro.frontend.obstacles.Meteor;
 import com.finpro.frontend.pools.BulletPool;
 import com.finpro.frontend.pools.MeteorPool;
-import com.finpro.frontend.GameConfig;
+import com.finpro.frontend.obstacles.Meteor;
+import com.finpro.frontend.commands.InputHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +80,6 @@ public class GameScreen implements Screen {
         if (currentState == GameState.GAME_OVER) {
             font.setColor(Color.RED);
             font.draw(batch, "GAME OVER", GameConfig.SCREEN_WIDTH/2 - 80, GameConfig.SCREEN_HEIGHT/2 + 20);
-
             font.getData().setScale(1.5f);
             font.setColor(Color.WHITE);
             font.draw(batch, "Press SPACE to Restart", GameConfig.SCREEN_WIDTH/2 - 120, GameConfig.SCREEN_HEIGHT/2 - 30);
@@ -122,14 +119,10 @@ public class GameScreen implements Screen {
         player.reset();
 
         List<Meteor> meteorsToRemove = new ArrayList<>(meteorPool.getActiveObjects());
-        for (Meteor m : meteorsToRemove) {
-            meteorPool.free(m);
-        }
+        for (Meteor m : meteorsToRemove) meteorPool.free(m);
 
         List<Bullet> bulletsToRemove = new ArrayList<>(bulletPool.getActiveObjects());
-        for (Bullet b : bulletsToRemove) {
-            bulletPool.free(b);
-        }
+        for (Bullet b : bulletsToRemove) bulletPool.free(b);
 
         meteorSpawnTimer = 0;
         currentState = GameState.PLAYING;
@@ -185,16 +178,12 @@ public class GameScreen implements Screen {
             for (int j = 0; j < bullets.size(); j++) {
                 Bullet b = bullets.get(j);
                 if (m.getBounds().overlaps(b.getBounds())) {
-
                     m.takeDamage();
-
                     bulletPool.free(b);
-
                     if (m.isDestroyed()) {
                         meteorPool.free(m);
                         i--;
                     }
-
                     break;
                 }
             }
