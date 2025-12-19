@@ -1,4 +1,4 @@
-package com.finpro.frontend;
+package com.finpro.frontend.services;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
@@ -22,6 +22,8 @@ public class ResourceManager implements Disposable {
     public void loadAll() {
         assetManager.load("playership.png", Texture.class);
         assetManager.load("bullet.png", Texture.class);
+        assetManager.load("meteor.png", Texture.class);
+        assetManager.load("spaceshooter.png", Texture.class);
 
 
         assetManager.finishLoading();
@@ -35,7 +37,7 @@ public class ResourceManager implements Disposable {
             if (name.contains("bullet")) return createPlaceholder(15, 30, Color.ORANGE);
 
             if (name.contains("background")) {
-                return createSpaceBackground((int)GameConfig.SCREEN_WIDTH, (int)GameConfig.SCREEN_HEIGHT);
+                return createSpaceBackground((int) GameConfig.SCREEN_WIDTH, (int)GameConfig.SCREEN_HEIGHT);
             }
 
             return createPlaceholder(32, 32, Color.MAGENTA);

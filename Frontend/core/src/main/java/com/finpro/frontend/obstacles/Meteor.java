@@ -1,13 +1,13 @@
 package com.finpro.frontend.obstacles;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.finpro.frontend.BaseEntity;
-import com.finpro.frontend.GameConfig;
+import com.finpro.frontend.services.GameConfig;
+import com.finpro.frontend.services.ResourceManager;
 
 public class Meteor extends BaseEntity {
 
@@ -17,7 +17,10 @@ public class Meteor extends BaseEntity {
 
     public Meteor() {
         super(0, 0, GameConfig.METEOR_WIDTH, GameConfig.METEOR_HEIGHT);
-        createTexture();
+
+
+        this.texture = ResourceManager.getInstance().getTexture("meteor.png");
+
         this.velocity = new Vector2(0, 0);
         this.isActive = false;
     }
@@ -30,6 +33,7 @@ public class Meteor extends BaseEntity {
 
         Vector2 direction = new Vector2(targetX - startX, targetY - startY);
         direction.x += MathUtils.random(-100, 100);
+
         float speed = MathUtils.random(GameConfig.METEOR_MIN_SPEED, GameConfig.METEOR_MAX_SPEED);
         this.velocity = direction.nor().scl(speed);
     }
@@ -49,7 +53,9 @@ public class Meteor extends BaseEntity {
         position.mulAdd(velocity, delta);
         updateBounds();
 
-        if (position.y < -getHeight() || position.x < -getWidth() || position.x > GameConfig.SCREEN_WIDTH) {
+        if (position.y < -getHeight() ||
+            position.x < -getWidth() ||
+            position.x > GameConfig.SCREEN_WIDTH + getWidth()) {
             isActive = false;
         }
     }
@@ -57,17 +63,14 @@ public class Meteor extends BaseEntity {
     @Override
     public void render(SpriteBatch batch) {
         if (isActive) {
-            if (hp == 1) batch.setColor(1f, 0.5f, 0.5f, 1f);
+            if (hp == 1) {
+                batch.setColor(1f, 0.5f, 0.5f, 1f);
+            }
+
             batch.draw(texture, position.x, position.y, bounds.width, bounds.height);
+
             batch.setColor(Color.WHITE);
         }
     }
 
-    private void createTexture() {
-        Pixmap p = new Pixmap((int)bounds.width, (int)bounds.height, Pixmap.Format.RGBA8888);
-        p.setColor(Color.BROWN);
-        p.fillCircle((int)bounds.width/2, (int)bounds.height/2, (int)bounds.width/2 - 2);
-        this.texture = new Texture(p);
-        p.dispose();
-    }
 }

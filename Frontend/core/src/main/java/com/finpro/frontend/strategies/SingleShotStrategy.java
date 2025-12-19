@@ -1,22 +1,17 @@
 package com.finpro.frontend.strategies;
 
-import com.finpro.frontend.PlayerShip;
 import com.finpro.frontend.Bullet;
 import com.finpro.frontend.pools.BulletPool;
 
 public class SingleShotStrategy implements WeaponStrategy {
 
     @Override
-    public void shoot(PlayerShip player) {
-        BulletPool pool = player.getBulletPool();
+    public void shoot(float x, float y, float width, float height, BulletPool bulletPool) {
+        Bullet b = bulletPool.obtain();
 
-        if (pool != null) {
-            Bullet b = pool.obtain();
+        float bulletX = x + (width / 2) - (b.getWidth() / 2);
+        float bulletY = y + height;
 
-            float startX = player.getX() + (player.getWidth() / 2) - (b.getWidth() / 2);
-            float startY = player.getY() + player.getHeight();
-
-            b.init(startX, startY);
-        }
+        b.init(bulletX, bulletY);
     }
 }

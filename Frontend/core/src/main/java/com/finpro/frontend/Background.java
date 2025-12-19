@@ -1,16 +1,14 @@
 package com.finpro.frontend;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.finpro.frontend.GameConfig;
-import com.finpro.frontend.ResourceManager;
+import com.finpro.frontend.services.ResourceManager;
 
 public class Background {
 
     private Texture texture;
-
     private float yOffset;
-
     private float speed = 100f;
 
     public Background() {
@@ -22,16 +20,19 @@ public class Background {
     }
 
     public void update(float delta) {
+        float currentHeight = Gdx.graphics.getHeight();
+
         yOffset -= speed * delta;
 
-        if (yOffset <= -GameConfig.SCREEN_HEIGHT) {
-            yOffset += GameConfig.SCREEN_HEIGHT;
+        if (yOffset <= -currentHeight) {
+            yOffset += currentHeight;
         }
     }
 
     public void render(SpriteBatch batch) {
-        float width = GameConfig.SCREEN_WIDTH;
-        float height = GameConfig.SCREEN_HEIGHT;
+
+        float width = Gdx.graphics.getWidth();
+        float height = Gdx.graphics.getHeight();
 
         batch.draw(texture, 0, yOffset, width, height);
 

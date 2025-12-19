@@ -3,15 +3,21 @@ package com.finpro.frontend;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.finpro.frontend.pools.BulletPool;
+import com.finpro.frontend.services.GameConfig;
+import com.finpro.frontend.services.ResourceManager;
 import com.finpro.frontend.strategies.SingleShotStrategy;
 import com.finpro.frontend.strategies.WeaponStrategy;
 
 public class PlayerShip extends BaseEntity {
 
     private Texture texture;
-    private WeaponStrategy currentWeapon;
-    private BulletPool bulletPool;
     private int lives;
+    private BulletPool bulletPool;
+    private WeaponStrategy currentWeapon;
+
+
+    private float worldWidthLimit;
+    private float worldHeightLimit;
 
     public PlayerShip() {
         super(
@@ -24,75 +30,61 @@ public class PlayerShip extends BaseEntity {
         this.texture = ResourceManager.getInstance().getTexture("playership.png");
         this.currentWeapon = new SingleShotStrategy();
         this.lives = GameConfig.PLAYER_LIVES;
+        this.isActive = true;
+
+        this.worldWidthLimit = GameConfig.SCREEN_WIDTH;
+        this.worldHeightLimit = GameConfig.SCREEN_HEIGHT;
     }
 
-    public void reset() {
-        this.lives = GameConfig.PLAYER_LIVES;
-
-        setPosition(
-            (GameConfig.SCREEN_WIDTH / 2) - (GameConfig.PLAYER_WIDTH / 2),
-            50
-        );
-    }
-
-    public void hit() {
-        if (lives > 0) {
-            lives--;
-        }
-    }
-
-    public int getLives() {
-        return lives;
-    }
-
-    public boolean isDead() {
-        return lives <= 0;
+    public void updateLimits(float width, float height) {
+        this.worldWidthLimit = width;
+        this.worldHeightLimit = height;
     }
 
     public void setBulletPool(BulletPool pool) {
         this.bulletPool = pool;
     }
 
-    public BulletPool getBulletPool() {
-        return this.bulletPool;
+    public void move(float dirX, float dirY, float delta) {
+        float speed = GameConfig.PLAYER_SPEED;
+        position.x += dirX * speed * delta;
+        position.y += dirY * speed * delta;
+    }
+
+    public void performShoot() {
+        if (bulletPool != null) {
+            currentWeapon.shoot(this.position.x, this.position.y, getWidth(), getHeight(), bulletPool);
+
+        }
     }
 
     @Override
     public void update(float delta) {
+
         keepWithinScreen();
         updateBounds();
     }
 
-    @Override
-    public void render(SpriteBatch batch) {
-        if (!isDead()) {
-            batch.draw(texture, position.x, position.y, bounds.width, bounds.height);
-        }
-    }
-
-    public void move(float dirX, float dirY, float delta) {
-        if (isDead()) return;
-        position.x += dirX * GameConfig.PLAYER_SPEED * delta;
-        position.y += dirY * GameConfig.PLAYER_SPEED * delta;
-    }
-
-    public void performShoot() {
-        if (!isDead() && currentWeapon != null && bulletPool != null) {
-            currentWeapon.shoot(this);
-        }
-    }
-
-    public void setWeaponStrategy(WeaponStrategy weapon) {
-        this.currentWeapon = weapon;
-    }
-
     private void keepWithinScreen() {
         if (position.x < 0) position.x = 0;
-        if (position.x > GameConfig.SCREEN_WIDTH - bounds.width)
-            position.x = GameConfig.SCREEN_WIDTH - bounds.width;
-
+        if (position.x > worldWidthLimit - getWidth()) position.x = worldWidthLimit - getWidth();
         if (position.y < 0) position.y = 0;
-        if (position.y > GameConfig.SCREEN_HEIGHT - bounds.height)
-            position.y = GameConfig.SCREEN_HEIGHT - bounds.height;
+        if (position.y > worldHeightLimit - getHeight()) position.y = worldHeightLimit - getHeight();
+    }
+
+    @Override
+    public void render(SpriteBatch batch) {
+        batch.draw(texture, position.x, position.y, getWidth(), getHeight());
+    }
+
+    public void hit() { lives--; }
+    public boolean isDead() { return lives <= 0; }
+    public int getLives() { return lives; }
+
+    public void reset() {
+        this.lives = GameConfig.PLAYER_LIVES;
+        this.isActive = true;
+        this.position.set((worldWidthLimit / 2) - (getWidth() / 2), 50);
+        updateBounds();
     }
 }
