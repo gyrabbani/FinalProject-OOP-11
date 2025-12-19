@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.finpro.frontend.BaseEntity;
+import com.finpro.frontend.services.DifficultyManager;
 import com.finpro.frontend.services.GameConfig;
 import com.finpro.frontend.services.ResourceManager;
 
@@ -34,8 +35,9 @@ public class Meteor extends BaseEntity {
         Vector2 direction = new Vector2(targetX - startX, targetY - startY);
         direction.x += MathUtils.random(-100, 100);
 
-        float speed = MathUtils.random(GameConfig.METEOR_MIN_SPEED, GameConfig.METEOR_MAX_SPEED);
-        this.velocity = direction.nor().scl(speed);
+        float minSpeed = DifficultyManager.getInstance().getMinMeteorSpeed();
+        float maxSpeed = DifficultyManager.getInstance().getMaxMeteorSpeed();
+        float speed = MathUtils.random(minSpeed, maxSpeed);        this.velocity = direction.nor().scl(speed);
     }
 
     public void takeDamage() {

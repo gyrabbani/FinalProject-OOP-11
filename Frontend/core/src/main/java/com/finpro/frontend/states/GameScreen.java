@@ -9,11 +9,10 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-
 import com.finpro.frontend.Background;
 import com.finpro.frontend.PlayerShip;
 import com.finpro.frontend.ScoreManager;
@@ -25,7 +24,9 @@ import com.finpro.frontend.observer.Observer;
 import com.finpro.frontend.observer.Subject;
 import com.finpro.frontend.pools.BulletPool;
 import com.finpro.frontend.pools.MeteorPool;
+import com.finpro.frontend.services.DifficultyManager;
 import com.finpro.frontend.services.GameConfig;
+import com.finpro.frontend.services.ResourceManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +61,8 @@ public class GameScreen implements Screen, Subject {
         this.currentState = GameState.PLAYING;
 
         this.camera = new OrthographicCamera();
-        this.viewport = new ExtendViewport(GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT, camera);        this.viewport.apply();
+        this.viewport = new ExtendViewport(GameConfig.SCREEN_WIDTH, GameConfig.SCREEN_HEIGHT, camera);
+        this.viewport.apply();
 
         this.layout = new GlyphLayout();
 
@@ -89,6 +91,7 @@ public class GameScreen implements Screen, Subject {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         handleGlobalInput();
+
         if (currentState == GameState.PLAYING) {
             updatePlaying(delta);
         }
@@ -105,18 +108,30 @@ public class GameScreen implements Screen, Subject {
 
         if (player != null) {
             for (int i = 0; i < player.getLives(); i++) {
-                batch.draw(heartTexture, 20 + (i * 30), GameConfig.SCREEN_HEIGHT - 50, 20, 20);
+                batch.draw(heartTexture, 20 + (i * 30), viewport.getWorldHeight() - 50, 20, 20);
             }
         }
 
         Color oldColor = font.getColor();
         font.setColor(Color.WHITE);
-        font.draw(batch, "Score: " + scoreManager.getScore(), 20, 40);
+        font.draw(batch, "Score: " + scoreManager.getScore(), 20, 70);
+
+        String difficultyText = "Difficulty: " + DifficultyManager.getInstance().getCurrentLevel();
+
+        if (DifficultyManager.getInstance().getCurrentLevel() == DifficultyManager.DifficultyLevel.HARD) {
+            font.setColor(Color.RED);
+        } else if (DifficultyManager.getInstance().getCurrentLevel() == DifficultyManager.DifficultyLevel.MEDIUM) {
+            font.setColor(Color.YELLOW);
+        } else {
+            font.setColor(Color.GREEN);
+        }
+
+        font.draw(batch, difficultyText, 20, 40);
         font.setColor(oldColor);
+
         drawOverlayText();
         batch.end();
     }
-
 
     @Override
     public void resize(int width, int height) {
@@ -139,10 +154,19 @@ public class GameScreen implements Screen, Subject {
 
         if (background != null) background.update(delta);
 
+        DifficultyManager.getInstance().updateDifficulty(scoreManager.getScore());
+
         meteorSpawnTimer += delta;
-        if (meteorSpawnTimer > GameConfig.METEOR_SPAWN_TIME) {
+
+        float currentInterval = DifficultyManager.getInstance().getSpawnInterval();
+
+
+        if (meteorSpawnTimer > currentInterval) {
             meteorSpawnTimer = 0;
-            spawnMeteor();
+
+            float worldWidth = viewport.getWorldWidth();
+            float worldHeight = viewport.getWorldHeight();
+            spawnMeteor(worldWidth, worldHeight);
         }
 
         updateBullets(delta);
@@ -200,17 +224,21 @@ public class GameScreen implements Screen, Subject {
         }
     }
 
-    private void spawnMeteor() { meteorFactory.createMeteor(player); }
+    private void spawnMeteor(float worldWidth, float worldHeight) {
+        meteorFactory.createMeteor(player, worldWidth, worldHeight);
+    }
 
     private void restartGame() {
         player.reset();
-        scoreManager.reset();
+
         List<Meteor> meteorsToRemove = new ArrayList<>(meteorPool.getActiveObjects());
         for (Meteor m : meteorsToRemove) meteorPool.free(m);
         List<Bullet> bulletsToRemove = new ArrayList<>(bulletPool.getActiveObjects());
         for (Bullet b : bulletsToRemove) bulletPool.free(b);
         meteorSpawnTimer = 0;
         currentState = GameState.PLAYING;
+
+        DifficultyManager.getInstance().updateDifficulty(0);
     }
 
     private void updateBullets(float delta) {
@@ -238,13 +266,20 @@ public class GameScreen implements Screen, Subject {
         for (int i = 0; i < meteors.size(); i++) {
             Meteor m = meteors.get(i);
             if (m.getBounds().overlaps(player.getBounds())) {
-                player.hit(); meteorPool.free(m); i--; continue;
+                player.hit();
+                m.setActive(false);
+                continue;
             }
             for (int j = 0; j < bullets.size(); j++) {
                 Bullet b = bullets.get(j);
                 if (m.getBounds().overlaps(b.getBounds())) {
-                    m.takeDamage(); bulletPool.free(b);
-                    if (m.isDestroyed()) { notifyObservers("METEOR_DESTROYED"); meteorPool.free(m); i--; }
+                    m.takeDamage();
+                    b.setActive(false);
+
+                    if (m.isDestroyed()) {
+                        notifyObservers("METEOR_DESTROYED");
+                        m.setActive(false);
+                    }
                     break;
                 }
             }

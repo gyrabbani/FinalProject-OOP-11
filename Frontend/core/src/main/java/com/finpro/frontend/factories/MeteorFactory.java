@@ -4,7 +4,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.finpro.frontend.PlayerShip;
 import com.finpro.frontend.obstacles.Meteor;
 import com.finpro.frontend.pools.MeteorPool;
-import com.finpro.frontend.services.GameConfig;
 
 public class MeteorFactory {
 
@@ -14,18 +13,12 @@ public class MeteorFactory {
         this.meteorPool = meteorPool;
     }
 
-    public Meteor createMeteor(PlayerShip targetPlayer) {
-        Meteor m = meteorPool.obtain();
-
-
-        float startX = MathUtils.random(0, GameConfig.SCREEN_WIDTH - GameConfig.METEOR_WIDTH);
-        float startY = GameConfig.SCREEN_HEIGHT;
-
-        float targetX = targetPlayer.getX();
-        float targetY = targetPlayer.getY();
-
-        m.init(startX, startY, targetX, targetY);
-
-        return m;
+    public void createMeteor(PlayerShip player, float worldWidth, float worldHeight) {
+        Meteor meteor = meteorPool.obtain();
+        float spawnX = MathUtils.random(0, worldWidth);
+        float spawnY = worldHeight + 50;
+        float targetX = player.getX();
+        float targetY = player.getY();
+        meteor.init(spawnX, spawnY, targetX, targetY);
     }
 }
