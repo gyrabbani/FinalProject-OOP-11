@@ -24,8 +24,15 @@ public class ResourceManager implements Disposable {
         assetManager.load("bullet.png", Texture.class);
         assetManager.load("meteor.png", Texture.class);
         assetManager.load("spaceshooter.png", Texture.class);
-
-
+        assetManager.load("enemy_small.png", Texture.class);
+        assetManager.load("enemy_medium.png", Texture.class);
+        assetManager.load("enemy_big.png", Texture.class);
+        assetManager.load("projectile_enemy.png", Texture.class); // Peluru Small
+        assetManager.load("missile.png", Texture.class);          // Roket Medium/Big
+        assetManager.load("explosion.png", Texture.class);        // Ledakan
+        assetManager.load("laser_tex.png", Texture.class);        // Tekstur Laser
+        assetManager.load("shield.png", Texture.class);           // Icon Shield
+        assetManager.load("star.png", Texture.class);
         assetManager.finishLoading();
     }
 
@@ -35,11 +42,17 @@ public class ResourceManager implements Disposable {
         } else {
             if (name.contains("player")) return createPlaceholder(32, 32, Color.CYAN);
             if (name.contains("bullet")) return createPlaceholder(15, 30, Color.ORANGE);
-
+            if (name.contains("projectile_enemy")) return createPlaceholder(10, 20, Color.YELLOW);
+            if (name.contains("missile")) return createPlaceholder(15, 35, Color.ORANGE);
+            if (name.contains("explosion")) return createPlaceholder(64, 64, Color.RED);
+            if (name.contains("laser")) return createPlaceholder(10, 10, Color.CYAN); // Putih kebiruan
+            if (name.contains("shield")) return createPlaceholder(32, 32, new Color(0, 1, 1, 0.5f)); // Cyan transparan
+            if (name.contains("star")) return createPlaceholder(20, 20, Color.YELLOW);
             if (name.contains("background")) {
                 return createSpaceBackground((int) GameConfig.SCREEN_WIDTH, (int)GameConfig.SCREEN_HEIGHT);
             }
 
+            if (name.contains("enemy")) return createPlaceholder(32, 32, Color.RED);
             return createPlaceholder(32, 32, Color.MAGENTA);
         }
     }
