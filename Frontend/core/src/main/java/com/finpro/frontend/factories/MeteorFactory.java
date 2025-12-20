@@ -15,10 +15,12 @@ public class MeteorFactory {
 
     public void createMeteor(PlayerShip player, float worldWidth, float worldHeight) {
         Meteor meteor = meteorPool.obtain();
+
         float spawnX = MathUtils.random(0, worldWidth);
         float spawnY = worldHeight + 50;
         float targetX = player.getX();
         float targetY = player.getY();
-        meteor.init(spawnX, spawnY, targetX, targetY);
+
+        meteor.init(spawnX, spawnY, targetX, targetY, worldWidth, worldHeight);
     }
 }

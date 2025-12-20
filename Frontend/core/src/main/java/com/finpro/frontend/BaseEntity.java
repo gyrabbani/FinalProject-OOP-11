@@ -16,8 +16,11 @@ public abstract class BaseEntity {
         this.bounds = new Rectangle(x, y, width, height);
     }
 
-
     public abstract void update(float delta);
+
+
+    public void takeDamage() {
+    }
 
     public abstract void render(SpriteBatch batch);
 

@@ -10,7 +10,7 @@ public class GameConfig {
     public static final float PLAYER_WIDTH = 64f;
     public static final float PLAYER_HEIGHT = 64f;
 
-    public static final int PLAYER_LIVES = 3;
+    public static final int PLAYER_LIVES = 5;
 
     public static final float BULLET_SPEED = 500f;
     public static final float BULLET_WIDTH = 15f;

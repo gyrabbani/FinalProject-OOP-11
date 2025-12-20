@@ -15,9 +15,12 @@ public class ScoreManager implements Observer {
         if ("METEOR_DESTROYED".equals(event)) {
             addScore(50);
         }
+        if ("ENEMY_DESTROYED".equals(event)){
+            addScore(150);
+        }
     }
 
-    private void addScore(int value) {
+    public void addScore(int value) {
         this.score += value;
     }
 
