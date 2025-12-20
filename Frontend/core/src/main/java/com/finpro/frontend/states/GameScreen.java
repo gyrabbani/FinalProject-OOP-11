@@ -32,6 +32,7 @@ import com.finpro.frontend.observer.Subject;
 import com.finpro.frontend.pools.*;
 import com.finpro.frontend.services.DifficultyManager;
 import com.finpro.frontend.services.GameConfig;
+import com.finpro.frontend.services.ResourceManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,10 @@ public class GameScreen implements Screen, Subject {
     private LootPool lootPool;
     private LootFactory lootFactory;
     private float lootSpawnTimer;
+
+    private boolean gameOverSoundPlayed = false;
+    private boolean gameOverTriggered = false;
+
 
     public GameScreen() {
         this.batch = new SpriteBatch();
@@ -218,7 +223,12 @@ public class GameScreen implements Screen, Subject {
         updateExplosions(delta);
         checkCollisions();
 
-        if (player.isDead()) currentState = GameState.GAME_OVER;
+        if (player.isDead() && !gameOverTriggered) {
+            gameOverTriggered = true;
+            currentState = GameState.GAME_OVER;
+            ResourceManager.getInstance().stopMusic();
+            ResourceManager.getInstance().playSfx("gameover.wav");
+        }
     }
 
     private void updateEnemies(float delta) {
@@ -236,6 +246,7 @@ public class GameScreen implements Screen, Subject {
             p.update(delta);
             if (p.getType() == EnemyProjectile.Type.MISSILE && p.hasReachedTarget()) {
                 spawnExplosion(p.getX() + p.getWidth()/2, p.getY() + p.getHeight()/2);
+                ResourceManager.getInstance().playSfx("explosion.wav");
                 p.setActive(false);
             }
             if (!p.isActive()) { enemyProjectilePool.free(p); i--; }
@@ -263,6 +274,7 @@ public class GameScreen implements Screen, Subject {
                 player.levelUp(); // naik level
                 star.setActive(false);
                 scoreManager.addScore(500); // Bonus score
+                ResourceManager.getInstance().playSfx("pickup.mp3");
             }
         }
 
@@ -279,6 +291,7 @@ public class GameScreen implements Screen, Subject {
                     if (m.isDestroyed()) {
                         notifyObservers("METEOR_DESTROYED");
                         m.setActive(false);
+                        ResourceManager.getInstance().playSfx("explosion.wav");
                     }
                 }
             }
@@ -308,6 +321,7 @@ public class GameScreen implements Screen, Subject {
                     if (e.isDestroyed()) {
                         notifyObservers("ENEMY_DESTROYED");
                         scoreManager.addScore(e.getScoreValue());
+                        ResourceManager.getInstance().playSfx("explosion.wav");
 
                         // 7. SPAWN LOOT DARI MUSUH (30% Chance)
                         if (MathUtils.randomBoolean(0.3f)) {
@@ -352,8 +366,11 @@ public class GameScreen implements Screen, Subject {
         lootSpawnTimer = 0;
 
         currentState = GameState.PLAYING;
+        gameOverTriggered = false;
         DifficultyManager.getInstance().updateDifficulty(0);
         scoreManager.reset();
+
+        ResourceManager.getInstance().playMusic("gameplay.mp3", true);
     }
 
     private <T> void clearPool(ObjectPool<T> pool) {
@@ -401,7 +418,10 @@ public class GameScreen implements Screen, Subject {
             font.draw(batch, text3, camera.position.x - layout.width / 2, camera.position.y - 50);
 
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) restartGame();
-            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) ((Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
+            if (Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+                ResourceManager.getInstance().playSfx("click.wav");
+                ((Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
+            }
         } else if (currentState == GameState.PAUSED) {
             font.setColor(Color.YELLOW);
             font.getData().setScale(2f);
@@ -412,9 +432,9 @@ public class GameScreen implements Screen, Subject {
     @Override public void addObserver(Observer o) { observers.add(o); }
     @Override public void removeObserver(Observer o) { observers.remove(o); }
     @Override public void notifyObservers(String e) { for(Observer o: observers) o.onNotify(e); }
-    @Override public void show() {}
+    @Override public void show() { ResourceManager.getInstance().playMusic("gameplay.mp3", true);}
     @Override public void pause() { if(currentState == GameState.PLAYING) currentState = GameState.PAUSED; }
     @Override public void resume() { if(currentState == GameState.PAUSED) currentState = GameState.PLAYING; }
-    @Override public void hide() {}
+    @Override public void hide() { ResourceManager.getInstance().stopMusic();}
     @Override public void dispose() { batch.dispose(); font.dispose(); heartTexture.dispose(); }
 }

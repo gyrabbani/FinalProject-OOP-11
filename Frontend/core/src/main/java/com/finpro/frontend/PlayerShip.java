@@ -115,6 +115,7 @@ public class PlayerShip extends BaseEntity {
     public void performShoot() {
         if (bulletPool != null) {
             currentWeapon.shoot(this.position.x, this.position.y, getWidth(), getHeight(), bulletPool, currentDamage);
+            ResourceManager.getInstance().playSfx("shoot.wav");
         }
     }
 
@@ -161,11 +162,13 @@ public class PlayerShip extends BaseEntity {
             isInvulnerable = true;
             invulnerabilityTimer = INVULNERABILITY_DURATION;
             System.out.println("Player Hit! Lives left: " + lives);
+            ResourceManager.getInstance().playSfx("explosion.wav");
         }
     }
 
     public boolean isDead() { return lives <= 0; }
-    public int getLives() { return lives; }
+    public int getLives() {
+        return lives; }
 
     public void reset() {
         this.lives = GameConfig.PLAYER_LIVES;
