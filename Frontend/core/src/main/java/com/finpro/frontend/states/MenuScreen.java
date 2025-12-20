@@ -64,7 +64,7 @@ public class MenuScreen implements Screen {
                 }
 
                 UserManager.getInstance().loginOrRegister(username);
-
+                ResourceManager.getInstance().playSfx("click.wav");
                 ((Game) Gdx.app.getApplicationListener()).setScreen(new GameScreen());
             }
         });
@@ -73,6 +73,7 @@ public class MenuScreen implements Screen {
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
+        ResourceManager.getInstance().playMusic("menu.mp3", true);
     }
 
     @Override

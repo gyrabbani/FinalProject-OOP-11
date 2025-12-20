@@ -5,11 +5,19 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
+
 
 public class ResourceManager implements Disposable {
 
     private static final ResourceManager instance = new ResourceManager();
     private final AssetManager assetManager;
+    private float musicVolume = 0.7f;
+    private float sfxVolume = 0.8f;
+    private boolean musicEnabled = true;
+    private boolean sfxEnabled = true;
+    private Music currentMusic;
 
     private ResourceManager() {
         assetManager = new AssetManager();
@@ -33,6 +41,17 @@ public class ResourceManager implements Disposable {
         assetManager.load("laser_tex.png", Texture.class);        // Tekstur Laser
         assetManager.load("shield.png", Texture.class);           // Icon Shield
         assetManager.load("star.png", Texture.class);
+        // SFX
+        assetManager.load("click.wav", Sound.class);
+        assetManager.load("shoot.wav", Sound.class);
+        assetManager.load("explosion.wav", Sound.class);
+        //assetManager.load("hit.wav", Sound.class);
+        assetManager.load("pickup.mp3", Sound.class);
+        assetManager.load("gameover.wav", Sound.class);
+        // Music
+        assetManager.load("menu.mp3", Music.class);
+        assetManager.load("gameplay.mp3", Music.class);
+
         assetManager.finishLoading();
     }
 
@@ -90,6 +109,37 @@ public class ResourceManager implements Disposable {
         pixmap.dispose();
         return t;
     }
+
+    public void playSfx(String path) {
+        if (!sfxEnabled) return;
+        if (assetManager.isLoaded(path)) {
+            Sound sfx = assetManager.get(path, Sound.class);
+            sfx.play(sfxVolume);
+        }
+    }
+
+    public void playMusic(String path, boolean looping) {
+        if (!musicEnabled) return;
+        if (!assetManager.isLoaded(path)) return;
+
+        Music m = assetManager.get(path, Music.class);
+
+        if (currentMusic != null && currentMusic != m) {
+            currentMusic.stop();
+        }
+
+        currentMusic = m;
+        currentMusic.setLooping(looping);
+        currentMusic.setVolume(musicVolume);
+
+        if (!currentMusic.isPlaying()) currentMusic.play();
+    }
+
+    public void stopMusic() {
+        if (currentMusic != null) currentMusic.stop();
+    }
+
+
 
     @Override
     public void dispose() {
