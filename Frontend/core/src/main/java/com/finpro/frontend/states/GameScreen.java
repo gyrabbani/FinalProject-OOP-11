@@ -33,6 +33,8 @@ import com.finpro.frontend.pools.*;
 import com.finpro.frontend.services.DifficultyManager;
 import com.finpro.frontend.services.GameConfig;
 import com.finpro.frontend.services.ResourceManager;
+import com.finpro.frontend.services.ApiClient;
+import com.finpro.frontend.services.UserManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -228,6 +230,24 @@ public class GameScreen implements Screen, Subject {
             currentState = GameState.GAME_OVER;
             ResourceManager.getInstance().stopMusic();
             ResourceManager.getInstance().playSfx("gameover.wav");
+
+            if (UserManager.getInstance().isLoggedIn()) {
+                ApiClient.submitGameOver(
+                    UserManager.getInstance().getCurrentUUID(),
+                    scoreManager.getScore(),
+                    new ApiClient.GameOverCallback() {
+                        @Override
+                        public void onSuccess(int newHighScore) {
+                            UserManager.getInstance().updateHighScore(newHighScore);
+                        }
+
+                        @Override
+                        public void onError(String msg) {
+                            System.out.println("Submit score error: " + msg);
+                        }
+                    }
+                );
+            }
         }
     }
 
