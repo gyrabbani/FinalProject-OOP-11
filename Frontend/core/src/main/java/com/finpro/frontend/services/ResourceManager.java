@@ -35,6 +35,7 @@ public class ResourceManager implements Disposable {
         assetManager.load("enemy_small.png", Texture.class);
         assetManager.load("enemy_medium.png", Texture.class);
         assetManager.load("enemy_big.png", Texture.class);
+        assetManager.load("boss.png", Texture.class);
         assetManager.load("projectile_enemy.png", Texture.class); // Peluru Small
         assetManager.load("missile.png", Texture.class);          // Roket Medium/Big
         assetManager.load("explosion.png", Texture.class);        // Ledakan

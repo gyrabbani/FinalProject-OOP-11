@@ -57,6 +57,7 @@ public class Enemy extends BaseEntity {
             case SMALL -> this.behavior = new SmallEnemyBehavior();
             case MEDIUM -> this.behavior = new MediumEnemyBehavior();
             case BIG -> this.behavior = new BigEnemyBehavior();
+            case BOSS -> this.behavior = new BossBehavior();
         }
 
         this.behavior.init(this, player, pool, worldWidth, worldHeight);
@@ -73,7 +74,6 @@ public class Enemy extends BaseEntity {
 
 
         // Logic Gerak Dasar (Entering & Patrol)
-        // boss nya lom dibuat
         if (type != Type.BOSS) {
             if (isEntering) {
                 position.y -= speed * delta;
@@ -114,8 +114,13 @@ public class Enemy extends BaseEntity {
             batch.setColor(Color.WHITE);
 
             if (shieldHp > 0 && shieldTexture != null) {
-                batch.setColor(1, 1, 1, 0.6f);
-                batch.draw(shieldTexture, position.x - 5, position.y - 5, bounds.width + 10, bounds.height + 10);
+                if (type == Type.BOSS) {
+                    // JIKA BOSS: Set warna BIRU MUDA (R=0.2, G=0.6, B=1) + Transparan (A=0.6)
+                    batch.setColor(0.2f, 0.6f, 1f, 0.6f);
+                } else {
+                    // JIKA BUKAN BOSS: Set warna PUTIH (Default) + Transparan (A=0.6)
+                    batch.setColor(1, 1, 1, 0.6f);
+                }                batch.draw(shieldTexture, position.x - 5, position.y - 5, bounds.width + 10, bounds.height + 10);
                 batch.setColor(Color.WHITE);
             }
 
@@ -140,6 +145,7 @@ public class Enemy extends BaseEntity {
     public boolean isDestroyed() { return hp <= 0; }
 
     // getter setter
+
     public void setTexture(Texture t) { this.texture = t; }
     public void setShieldTexture(Texture t) { this.shieldTexture = t; }
     public void setLaserTexture(Texture t) { this.laserTexture = t; }
@@ -148,6 +154,7 @@ public class Enemy extends BaseEntity {
     public void reduceHp(int amount) { this.hp -= amount; }
     public void setShieldHp(int hp) { this.shieldHp = hp; }
     public void reduceShieldHp(int amount) { this.shieldHp -= amount; }
+    public int getHp() { return hp; }
     public int getShieldHp() { return shieldHp; }
     public void setSpeed(float s) { this.speed = s; }
     public float getSpeed() { return speed; }
@@ -159,4 +166,5 @@ public class Enemy extends BaseEntity {
     public boolean isFiringLaser() { return isFiringLaser; }
     public boolean isEntering() { return isEntering; }
     public void setX(float x) { this.position.x = x; }
+    public Type getType() {return type; }
 }
