@@ -486,7 +486,7 @@ public class GameScreen implements Screen, Subject {
     @Override public void addObserver(Observer o) { observers.add(o); }
     @Override public void removeObserver(Observer o) { observers.remove(o); }
     @Override public void notifyObservers(String e) { for(Observer o: observers) o.onNotify(e); }
-    @Override public void show() { ResourceManager.getInstance().playMusic("gameplay.mp3", true);}
+    @Override public void show() { ResourceManager.getInstance().playMusic("gameplay.mp3", true); Gdx.input.setInputProcessor(null);}
     @Override public void pause() { if(currentState == GameState.PLAYING) currentState = GameState.PAUSED; }
     @Override public void resume() { if(currentState == GameState.PAUSED) currentState = GameState.PLAYING; }
     @Override public void hide() { ResourceManager.getInstance().stopMusic();}
