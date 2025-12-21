@@ -111,4 +111,9 @@ public class OfflineHighscoreStore {
         prefs.putString(KEY_TABLE_JSON, json.toJson(table));
         prefs.flush();
     }
+
+    public void clearAll() {
+        prefs.clear();
+        prefs.flush();
+    }
 }

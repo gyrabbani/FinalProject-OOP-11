@@ -15,6 +15,7 @@ import com.finpro.frontend.Background;
 import com.finpro.frontend.services.ApiClient;
 import com.finpro.frontend.services.OfflineHighscoreStore;
 import com.finpro.frontend.services.SyncService;
+import com.finpro.frontend.services.UserManager;
 import com.finpro.frontend.utils.SkinGenerator;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class HighscoreScreen implements Screen {
     private final TextButton offlineButton;
     private final TextButton refreshButton;
     private final TextButton backButton;
+    private final TextButton clearOfflineButton;
 
     private final ScrollPane scrollPane;
 
@@ -62,6 +64,7 @@ public class HighscoreScreen implements Screen {
         offlineButton = new TextButton("OFFLINE", skin);
         refreshButton = new TextButton("REFRESH", skin);
         backButton = new TextButton("BACK", skin);
+        clearOfflineButton = new TextButton("DELETE DATA", skin);
 
         scoreTable = new Table(skin);
         scrollPane = new ScrollPane(scoreTable, skin);
@@ -75,9 +78,10 @@ public class HighscoreScreen implements Screen {
 
         // row: ONLINE / OFFLINE / REFRESH
         Table topButtons = new Table();
-        topButtons.add(onlineButton).width(160).height(50).padRight(10);
-        topButtons.add(offlineButton).width(160).height(50).padRight(10);
-        topButtons.add(refreshButton).width(160).height(50);
+        topButtons.add(onlineButton).width(150).height(50).padRight(10);
+        topButtons.add(offlineButton).width(150).height(50).padRight(10);
+        topButtons.add(refreshButton).width(150).height(50).padRight(10);
+        topButtons.add(clearOfflineButton).width(150).height(50);
 
         root.add(topButtons).padBottom(10).row();
         root.add(statusLabel).padBottom(10).row();
@@ -107,6 +111,16 @@ public class HighscoreScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 ((Game) Gdx.app.getApplicationListener()).setScreen(new MenuScreen());
+            }
+        });
+
+        clearOfflineButton.addListener(new ClickListener() {
+            @Override public void clicked(InputEvent event, float x, float y) {
+                if (currentMode != Mode.OFFLINE) return;
+                OfflineHighscoreStore.getInstance().clearAll();
+                UserManager.getInstance().clearAllLocal();
+                statusLabel.setText("OFFLINE DATA DELETED");
+                loadLeaderboardOffline(); // refresh tabel offline
             }
         });
 
@@ -142,6 +156,7 @@ public class HighscoreScreen implements Screen {
     }
 
     private void updateButtonVisuals() {
+        clearOfflineButton.setVisible(currentMode == Mode.OFFLINE);
     }
 
     private void loadLeaderboardOnline() {
