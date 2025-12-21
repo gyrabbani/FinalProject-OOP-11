@@ -14,7 +14,6 @@ public class EnemyFactory {
     private float smallTimer;
     private float mediumTimer;
     private float bigTimer;
-    private float bossTimer;
 
     public EnemyFactory(EnemyPool enemyPool) {
         this.enemyPool = enemyPool;
@@ -27,7 +26,6 @@ public class EnemyFactory {
         smallTimer += delta;
         mediumTimer += delta;
         bigTimer += delta;
-        bossTimer += delta;
 
         // Cek spawn SMALL
         if (smallTimer >= dm.getInterval(Enemy.Type.SMALL)) {
@@ -47,14 +45,9 @@ public class EnemyFactory {
             bigTimer = 0;
         }
 
-        // Cek spawn BOSS ( belum tau ada apa ngga )
-        if (bossTimer >= dm.getInterval(Enemy.Type.BOSS)) {
-            spawnEnemy(Enemy.Type.BOSS, worldWidth, worldHeight, player, projectilePool);
-            bossTimer = 0;
-        }
     }
 
-    private void spawnEnemy(Enemy.Type type, float worldWidth, float worldHeight, PlayerShip player, EnemyProjectilePool pool) {
+    public void spawnEnemy(Enemy.Type type, float worldWidth, float worldHeight, PlayerShip player, EnemyProjectilePool pool) {
         Enemy enemy = enemyPool.obtain();
         float spawnX = MathUtils.random(0, worldWidth - 64);
         float spawnY = worldHeight + 50;

@@ -20,8 +20,8 @@ public class DifficultyManager {
     }
 
     public void updateDifficulty(int currentScore) {
-        if (currentScore < 1000) currentLevel = DifficultyLevel.EASY;
-        else if (currentScore < 3000) currentLevel = DifficultyLevel.MEDIUM;
+        if (currentScore < 3000) currentLevel = DifficultyLevel.EASY;
+        else if (currentScore < 10000) currentLevel = DifficultyLevel.MEDIUM;
         else currentLevel = DifficultyLevel.HARD;
     }
 

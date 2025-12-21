@@ -77,6 +77,9 @@ public class GameScreen implements Screen, Subject {
     private boolean gameOverSoundPlayed = false;
     private boolean gameOverTriggered = false;
 
+    private int nextBossScore = 10000;
+    private boolean isBossActive = false;
+
 
     public GameScreen() {
         this.batch = new SpriteBatch();
@@ -190,6 +193,15 @@ public class GameScreen implements Screen, Subject {
 
         DifficultyManager.getInstance().updateDifficulty(scoreManager.getScore());
 
+
+        if (scoreManager.getScore() >= nextBossScore && !isBossActive) {
+            enemyFactory.spawnEnemy(Enemy.Type.BOSS, viewport.getWorldWidth(), viewport.getWorldHeight(), player, enemyProjectilePool);
+
+            nextBossScore += 10000;
+            isBossActive = true;
+
+            System.out.println("BOSS SPAWNED! Score Freeze Active.");
+        }
         // Spawn Meteors
         meteorSpawnTimer += delta;
         if (meteorSpawnTimer > DifficultyManager.getInstance().getSpawnInterval()) {
@@ -288,17 +300,20 @@ public class GameScreen implements Screen, Subject {
         List<EnemyProjectile> projectiles = enemyProjectilePool.getActiveObjects();
         List<LootStar> lootStars = lootPool.getActiveObjects();
 
-        // player collision saat ambil loot
         for (LootStar star : lootStars) {
             if (star.getBounds().overlaps(player.getBounds())) {
-                player.levelUp(); // naik level
+                player.levelUp(); // Naik level senjata tetap jalan
                 star.setActive(false);
-                scoreManager.addScore(500); // Bonus score
+
+                // --- UPDATE: Cek Boss Active Dulu ---
+                if (!isBossActive) {
+                    scoreManager.addScore(500); // Skor cuma nambah kalau GAK ADA Boss
+                }
+
                 ResourceManager.getInstance().playSfx("pickup.mp3");
             }
         }
 
-        // Meteor Collisions
         for (Meteor m : meteors) {
             if (m.getBounds().overlaps(player.getBounds())) {
                 player.hit();
@@ -317,13 +332,18 @@ public class GameScreen implements Screen, Subject {
             }
         }
 
-        // Enemy Collisions
+        // COLLISION ENEMY
         for (Enemy e : enemies) {
+            // Player nabrak Musuh
             if (e.getBounds().overlaps(player.getBounds())) {
                 player.hit();
-                e.setActive(false);
+                // Kalau bukan Boss, musuh hancur. Boss tetap hidup.
+                if (e.getType() != Enemy.Type.BOSS) {
+                    e.setActive(false);
+                }
             }
 
+            // Kena Laser Musuh
             if (e.isFiringLaser()) {
                 float laserX = e.getX() + e.getWidth() / 2;
                 if (player.getX() < laserX + 5 && player.getX() + player.getWidth() > laserX - 5) {
@@ -333,17 +353,28 @@ public class GameScreen implements Screen, Subject {
                 }
             }
 
+            // Bullet kena Musuh
             for (Bullet b : bullets) {
                 if (b.isActive() && e.getBounds().overlaps(b.getBounds())) {
                     e.takeDamage();
                     b.setActive(false);
 
                     if (e.isDestroyed()) {
-                        notifyObservers("ENEMY_DESTROYED");
-                        scoreManager.addScore(e.getScoreValue());
                         ResourceManager.getInstance().playSfx("explosion.wav");
 
-                        // 7. SPAWN LOOT DARI MUSUH (30% Chance)
+                        if (e.getType() == Enemy.Type.BOSS) {
+                            notifyObservers("ENEMY_DESTROYED");
+
+                            isBossActive = false;
+                            System.out.println("BOSS DEFEATED! No Score Awarded. Resume Normal Game.");
+
+                        } else {
+                            if (!isBossActive) {
+                                notifyObservers("ENEMY_DESTROYED");
+                                scoreManager.addScore(e.getScoreValue());
+                            }
+                        }
+
                         if (MathUtils.randomBoolean(0.3f)) {
                             lootFactory.createLoot(e.getX(), e.getY());
                         }
@@ -354,7 +385,6 @@ public class GameScreen implements Screen, Subject {
             }
         }
 
-        // Projectile Collisions
         for (EnemyProjectile ep : projectiles) {
             if (ep.getBounds().overlaps(player.getBounds())) {
                 player.hit();
@@ -384,6 +414,9 @@ public class GameScreen implements Screen, Subject {
 
         meteorSpawnTimer = 0;
         lootSpawnTimer = 0;
+
+        nextBossScore = 10000;
+        isBossActive = false;
 
         currentState = GameState.PLAYING;
         gameOverTriggered = false;

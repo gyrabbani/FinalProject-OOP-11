@@ -19,4 +19,5 @@ public class GameConfig {
     public static final float METEOR_WIDTH = 40f;
     public static final float METEOR_HEIGHT = 25f;
 
+
 }
