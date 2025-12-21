@@ -128,4 +128,13 @@ public class UserManager {
         prefs.remove(PREF_HIGHSCORE);
         prefs.flush();
     }
+
+    public void clearAllLocal() {
+        prefs.clear();
+        prefs.flush();
+        currentUUID = null;
+        currentUsername = null;
+        highScore = 0;
+    }
+
 }
