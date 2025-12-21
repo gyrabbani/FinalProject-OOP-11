@@ -30,14 +30,11 @@ import com.finpro.frontend.obstacles.Meteor;
 import com.finpro.frontend.observer.Observer;
 import com.finpro.frontend.observer.Subject;
 import com.finpro.frontend.pools.*;
-import com.finpro.frontend.services.DifficultyManager;
-import com.finpro.frontend.services.GameConfig;
-import com.finpro.frontend.services.ResourceManager;
-import com.finpro.frontend.services.ApiClient;
-import com.finpro.frontend.services.UserManager;
+import com.finpro.frontend.services.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GameScreen implements Screen, Subject {
 
@@ -240,25 +237,29 @@ public class GameScreen implements Screen, Subject {
         if (player.isDead() && !gameOverTriggered) {
             gameOverTriggered = true;
             currentState = GameState.GAME_OVER;
+
             ResourceManager.getInstance().stopMusic();
             ResourceManager.getInstance().playSfx("gameover.wav");
 
-            if (UserManager.getInstance().isLoggedIn()) {
-                ApiClient.submitGameOver(
-                    UserManager.getInstance().getCurrentUUID(),
-                    scoreManager.getScore(),
-                    new ApiClient.GameOverCallback() {
-                        @Override
-                        public void onSuccess(int newHighScore) {
-                            UserManager.getInstance().updateHighScore(newHighScore);
-                        }
+            int score = scoreManager.getScore();
 
-                        @Override
-                        public void onError(String msg) {
-                            System.out.println("Submit score error: " + msg);
-                        }
+            if (UserManager.getInstance().isLoggedIn()) {
+                UUID uid = UserManager.getInstance().getCurrentUUID();
+                String uname = UserManager.getInstance().getCurrentUsername();
+
+                // WAJIB: catat dulu ke offline
+                OfflineHighscoreStore.getInstance().recordScore(uid, uname, score);
+
+                // baru coba kirim online
+                ApiClient.submitGameOver(uid, score, new ApiClient.GameOverCallback() {
+                    @Override public void onSuccess(int newHighScore) {
+                        OfflineHighscoreStore.getInstance().markSynced(uid);
                     }
-                );
+
+                    @Override public void onError(String msg) {
+                        System.out.println("Submit gameover failed (will sync later): " + msg);
+                    }
+                });
             }
         }
     }

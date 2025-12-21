@@ -11,7 +11,11 @@ import java.util.UUID;
 
 public class ApiClient {
 
+    // kalau nanti kamu mau ganti ke IP LAN, tinggal ubah di sini
     private static final String BASE_URL = "http://localhost:8080/api";
+
+    // biar offline cepat ketauan
+    private static final int TIMEOUT_MS = 2000;
 
     public interface LoginCallback {
         void onSuccess(UUID uuid, String username, int highScore);
@@ -28,7 +32,9 @@ public class ApiClient {
         public final String username;
         public final int highScore;
         public LeaderboardEntry(int rank, String username, int highScore) {
-            this.rank = rank; this.username = username; this.highScore = highScore;
+            this.rank = rank;
+            this.username = username;
+            this.highScore = highScore;
         }
     }
 
@@ -44,21 +50,39 @@ public class ApiClient {
         req.setUrl(BASE_URL + "/players/login");
         req.setHeader("Content-Type", "application/json");
         req.setContent(body);
+        req.setTimeOut(TIMEOUT_MS);
 
         Gdx.net.sendHttpRequest(req, new Net.HttpResponseListener() {
-            @Override public void handleHttpResponse(Net.HttpResponse httpResponse) {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
                 int code = httpResponse.getStatus().getStatusCode();
-                String res = httpResponse.getResultAsString();
-                if (code < 200 || code >= 300) { cb.onError("HTTP " + code + ": " + res); return; }
+                String res = safeBody(httpResponse);
 
-                JsonValue root = new JsonReader().parse(res);
-                UUID uuid = UUID.fromString(root.getString("uuid"));
-                String uname = root.getString("username");
-                int hs = root.getInt("highScore");
-                cb.onSuccess(uuid, uname, hs);
+                if (code < 200 || code >= 300) {
+                    cb.onError("Login failed: HTTP " + code + " - " + shorten(res));
+                    return;
+                }
+
+                try {
+                    JsonValue root = new JsonReader().parse(res);
+                    UUID uuid = UUID.fromString(root.getString("uuid"));
+                    String uname = root.getString("username");
+                    int hs = root.getInt("highScore", 0);
+                    cb.onSuccess(uuid, uname, hs);
+                } catch (Exception e) {
+                    cb.onError("Login parse error: " + e.getMessage() + " | body=" + shorten(res));
+                }
             }
-            @Override public void failed(Throwable t) { cb.onError(t.getMessage()); }
-            @Override public void cancelled() { cb.onError("cancelled"); }
+
+            @Override
+            public void failed(Throwable t) {
+                cb.onError("Login network error: " + explainThrowable(t));
+            }
+
+            @Override
+            public void cancelled() {
+                cb.onError("Login cancelled");
+            }
         });
     }
 
@@ -69,48 +93,110 @@ public class ApiClient {
         req.setUrl(BASE_URL + "/players/" + uuid + "/gameover");
         req.setHeader("Content-Type", "application/json");
         req.setContent(body);
+        req.setTimeOut(TIMEOUT_MS);
 
         Gdx.net.sendHttpRequest(req, new Net.HttpResponseListener() {
-            @Override public void handleHttpResponse(Net.HttpResponse httpResponse) {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
                 int code = httpResponse.getStatus().getStatusCode();
-                String res = httpResponse.getResultAsString();
-                if (code < 200 || code >= 300) { cb.onError("HTTP " + code + ": " + res); return; }
+                String res = safeBody(httpResponse);
 
-                JsonValue root = new JsonReader().parse(res);
-                int newHighScore = root.getInt("highScore");
-                cb.onSuccess(newHighScore);
+                if (code < 200 || code >= 300) {
+                    cb.onError("GameOver failed: HTTP " + code + " - " + shorten(res));
+                    return;
+                }
+
+                try {
+                    JsonValue root = new JsonReader().parse(res);
+                    int newHighScore = root.getInt("highScore", 0);
+                    cb.onSuccess(newHighScore);
+                } catch (Exception e) {
+                    cb.onError("GameOver parse error: " + e.getMessage() + " | body=" + shorten(res));
+                }
             }
-            @Override public void failed(Throwable t) { cb.onError(t.getMessage()); }
-            @Override public void cancelled() { cb.onError("cancelled"); }
+
+            @Override
+            public void failed(Throwable t) {
+                cb.onError("GameOver network error: " + explainThrowable(t));
+            }
+
+            @Override
+            public void cancelled() {
+                cb.onError("GameOver cancelled");
+            }
         });
     }
 
     public static void fetchLeaderboard(int limit, LeaderboardCallback cb) {
         Net.HttpRequest req = new Net.HttpRequest(Net.HttpMethods.GET);
         req.setUrl(BASE_URL + "/leaderboard?limit=" + limit);
+        req.setTimeOut(TIMEOUT_MS);
 
         Gdx.net.sendHttpRequest(req, new Net.HttpResponseListener() {
-            @Override public void handleHttpResponse(Net.HttpResponse httpResponse) {
+            @Override
+            public void handleHttpResponse(Net.HttpResponse httpResponse) {
                 int code = httpResponse.getStatus().getStatusCode();
-                String res = httpResponse.getResultAsString();
-                if (code < 200 || code >= 300) { cb.onError("HTTP " + code + ": " + res); return; }
+                String res = safeBody(httpResponse);
 
-                JsonValue arr = new JsonReader().parse(res);
-                List<LeaderboardEntry> list = new ArrayList<>();
-                for (JsonValue it = arr.child; it != null; it = it.next) {
-                    int rank = it.getInt("rank");
-                    String username = it.getString("username");
-                    int hs = it.getInt("highScore");
-                    list.add(new LeaderboardEntry(rank, username, hs));
+                if (code < 200 || code >= 300) {
+                    cb.onError("Leaderboard failed: HTTP " + code + " - " + shorten(res));
+                    return;
                 }
-                cb.onSuccess(list);
+
+                try {
+                    JsonValue arr = new JsonReader().parse(res);
+                    List<LeaderboardEntry> list = new ArrayList<>();
+
+                    for (JsonValue it = arr.child; it != null; it = it.next) {
+                        int rank = it.getInt("rank", 0);
+                        String username = it.getString("username", "-");
+                        int hs = it.getInt("highScore", 0);
+                        list.add(new LeaderboardEntry(rank, username, hs));
+                    }
+
+                    cb.onSuccess(list);
+                } catch (Exception e) {
+                    cb.onError("Leaderboard parse error: " + e.getMessage() + " | body=" + shorten(res));
+                }
             }
-            @Override public void failed(Throwable t) { cb.onError(t.getMessage()); }
-            @Override public void cancelled() { cb.onError("cancelled"); }
+
+            @Override
+            public void failed(Throwable t) {
+                cb.onError("Leaderboard network error: " + explainThrowable(t));
+            }
+
+            @Override
+            public void cancelled() {
+                cb.onError("Leaderboard cancelled");
+            }
         });
     }
 
     private static String escape(String s) {
+        if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String safeBody(Net.HttpResponse r) {
+        try {
+            String s = r.getResultAsString();
+            return (s == null) ? "" : s;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static String shorten(String s) {
+        if (s == null) return "";
+        s = s.trim();
+        if (s.length() <= 200) return s;
+        return s.substring(0, 200) + "...";
+    }
+
+    private static String explainThrowable(Throwable t) {
+        if (t == null) return "unknown";
+        String msg = t.getMessage();
+        if (msg == null || msg.trim().isEmpty()) msg = t.toString();
+        return msg;
     }
 }
