@@ -14,18 +14,29 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.finpro.frontend.services.SyncService;
 import com.finpro.frontend.services.UserManager;
 import com.finpro.frontend.utils.SkinGenerator;
 import com.finpro.frontend.Background;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.finpro.frontend.services.ResourceManager;
+import com.finpro.frontend.services.ApiClient;
+import com.finpro.frontend.states.HighscoreScreen;
+
+import java.util.List;
+
+import java.util.UUID;
 
 public class MenuScreen implements Screen {
 
     private Stage stage;
     private Skin skin;
     private Background background;
+    private Label leaderboardLabel;
+    private Label statusLabel;
+
+
 
     public MenuScreen() {
         stage = new Stage(new ScreenViewport());
@@ -46,34 +57,64 @@ public class MenuScreen implements Screen {
         final TextField usernameField = new TextField("", skin);
         usernameField.setMessageText("Username...");
         TextButton playButton = new TextButton("START GAME", skin);
+        TextButton highscoreButton = new TextButton("HIGHSCORE", skin);
+        //Label leaderboardLabel = new Label("Loading leaderboard...", skin);
+        statusLabel = new Label("", skin);
 
-        table.add(titleImage).padBottom(50).row();
-
+        table.add(titleImage).padBottom(40).row();
         table.add(userLabel).padBottom(10).row();
         table.add(usernameField).width(300).height(50).padBottom(20).row();
-        table.add(playButton).width(200).height(60);
+        table.add(playButton).width(220).height(60).padBottom(12).row();
+        table.add(highscoreButton).width(220).height(55).padBottom(18).row();
 
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String username = usernameField.getText().trim();
+                if (username.isEmpty()) return;
 
-                if (username.isEmpty()) {
-                    System.out.println("Username tidak boleh kosong!");
-                    return;
-                }
-
-                UserManager.getInstance().loginOrRegister(username);
                 ResourceManager.getInstance().playSfx("click.wav");
-                ((Game) Gdx.app.getApplicationListener()).setScreen(new GameScreen());
+
+                ApiClient.login(username, new ApiClient.LoginCallback() {
+                    @Override
+                    public void onSuccess(UUID uuid, String uname, int highScore) {
+                        UserManager.getInstance().setUserFromBackend(uuid, uname, highScore);
+                        Gdx.app.postRunnable(() ->
+                            ((Game) Gdx.app.getApplicationListener()).setScreen(new GameScreen())
+                        );
+                    }
+
+                    @Override
+                    public void onError(String msg) {
+                        System.out.println("Login error: " + msg);
+
+                        // FALLBACK OFFLINE
+                        UserManager.getInstance().loginOrRegisterOffline(username);
+
+                        Gdx.app.postRunnable(() ->
+                            ((Game) Gdx.app.getApplicationListener()).setScreen(new GameScreen())
+                        );
+                    }
+                });
+
             }
         });
+
+        highscoreButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                ResourceManager.getInstance().playSfx("click.wav");
+                ((Game) Gdx.app.getApplicationListener()).setScreen(new HighscoreScreen());
+            }
+        });
+
     }
 
     @Override
     public void show() {
         Gdx.input.setInputProcessor(stage);
         ResourceManager.getInstance().playMusic("menu.mp3", true);
+        SyncService.trySyncOfflineToOnline();
     }
 
     @Override

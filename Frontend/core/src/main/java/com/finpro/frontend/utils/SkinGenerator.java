@@ -4,10 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 
 public class SkinGenerator {
 
@@ -43,6 +40,13 @@ public class SkinGenerator {
         buttonStyle.over = skin.newDrawable("white", Color.LIGHT_GRAY);
         skin.add("default", buttonStyle);
 
+        ScrollPane.ScrollPaneStyle scrollStyle = new ScrollPane.ScrollPaneStyle();
+        scrollStyle.background = skin.newDrawable("white", new Color(0, 0, 0, 0.35f)); // transparan gelap
+        scrollStyle.vScroll = skin.newDrawable("white", new Color(1, 1, 1, 0.15f));    // track
+        scrollStyle.vScrollKnob = skin.newDrawable("white", new Color(1, 1, 1, 0.60f)); // knob
+        skin.add("default", scrollStyle);
+
+        pixmap.dispose();
         return skin;
     }
 }
